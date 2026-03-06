@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "pnpm: build (ide-vscode)",
+      "type": "shell",
+      "command": "pnpm --filter @execlens/ide-vscode build",
+      "problemMatcher": "$tsc"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "lib": ["ES2022"],
+    "types": ["vscode"]
+  },
+  "references": [
+    { "path": "../../../protocol" },
+    { "path": "../../../core" },
+    { "path": "../../language/tsjs" },
+    { "path": "../../runtime/node" },
+    { "path": "../../../ui" }
+  ],
+  "include": ["src/**/*.ts"]
+}

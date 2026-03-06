@@ -1,0 +1,17 @@
+{
+  "name": "execlens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "IDE function execution simulator",
+  "packageManager": "pnpm@10.6.0",
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "clean": "tsc -b tsconfig.json --clean",
+    "typecheck": "tsc -b tsconfig.json --pretty",
+    "dev:vscode": "pnpm --filter @execlens/ide-vscode watch"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
+}

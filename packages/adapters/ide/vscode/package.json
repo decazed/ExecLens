@@ -1,0 +1,28 @@
+{
+  "name": "@execlens/ide-vscode",
+  "version": "0.1.0",
+  "private": true,
+  "displayName": "Execlens",
+  "type": "module",
+  "main": "./dist/extension.js",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "execlens.openSimulator",
+        "title": "Execlens: Open Simulator"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0"
+  }
+}
