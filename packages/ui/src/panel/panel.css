@@ -1,0 +1,173 @@
+:root {
+  --bg: #0d141f;
+  --bg-accent: #152338;
+  --panel: rgba(19, 30, 47, 0.88);
+  --panel-border: rgba(121, 147, 185, 0.28);
+  --text: #eaf0fb;
+  --text-dim: #9fb0cd;
+  --muted: #7f94b7;
+  --input: #111d2e;
+  --input-border: #37517c;
+  --button: #3f79c8;
+  --button-hover: #2f68b7;
+  --shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: "Segoe UI Variable", "Aptos", "Trebuchet MS", "Gill Sans", sans-serif;
+  background:
+    radial-gradient(circle at 8% -15%, rgba(85, 132, 195, 0.35), transparent 40%),
+    radial-gradient(circle at 100% 8%, rgba(60, 116, 193, 0.2), transparent 32%),
+    linear-gradient(165deg, var(--bg), var(--bg-accent));
+}
+
+.app {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.hero {
+  display: grid;
+  gap: 2px;
+  padding: 4px 2px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0.3px;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.card {
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, rgba(25, 40, 63, 0.92), var(--panel));
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.value {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  color: #f3f7ff;
+}
+
+.run-form {
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(10, 18, 30, 0.45);
+}
+
+.field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.type-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+}
+
+.field-input,
+.json-input {
+  width: 100%;
+  color: var(--text);
+  background: var(--input);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  outline: none;
+}
+
+.field-input {
+  padding: 8px 10px;
+}
+
+.json-input {
+  min-height: 140px;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  resize: vertical;
+}
+
+.field-input:focus,
+.json-input:focus {
+  border-color: #6ea8fb;
+  box-shadow: 0 0 0 2px rgba(88, 145, 228, 0.22);
+}
+
+.run-button {
+  justify-self: start;
+  padding: 9px 14px;
+  border: 1px solid #7eb3ff44;
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--button), var(--button-hover));
+  color: #f6fbff;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+}
+
+.run-button:hover {
+  filter: brightness(1.08);
+}
+
+.output {
+  margin: 10px 0 0;
+  padding: 11px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: rgba(10, 18, 30, 0.45);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-dim);
+}

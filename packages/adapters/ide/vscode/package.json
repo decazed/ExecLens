@@ -38,6 +38,10 @@
   "scripts": {
     "build": "tsc -b"
   },
+  "dependencies": {
+    "@execlens/adapter-tsjs": "workspace:*",
+    "@execlens/ui": "workspace:*"
+  },
   "devDependencies": {
     "@types/vscode": "^1.96.0"
   }

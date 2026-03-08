@@ -12,7 +12,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node ./scripts/copy-panel-assets.mjs",
+    "copy:assets": "node ./scripts/copy-panel-assets.mjs",
     "clean": "tsc -b --clean"
   },
   "dependencies": {

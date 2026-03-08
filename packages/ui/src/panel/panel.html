@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src {{cspSource}} 'nonce-{{nonce}}'; script-src 'nonce-{{nonce}}';"
+    />
+    <title>Execlens Simulator</title>
+    <style nonce="{{nonce}}">
+{{styles}}
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="eyebrow">Function Simulator</p>
+        <h1>Execlens</h1>
+      </header>
+
+      <section class="card">
+        <p class="label">Function under cursor</p>
+        <p class="value">{{functionName}}</p>
+      </section>
+
+      <section class="card">
+        <p class="label">Parameters</p>
+        <form id="run-form" class="run-form">
+          {{parameterFieldsHtml}}
+          <button type="submit" class="run-button">Run Simulation</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <p class="label">Simulation output</p>
+        <pre id="run-output" class="output">Click Run to preview input payload.</pre>
+      </section>
+    </main>
+    <script nonce="{{nonce}}">
+{{script}}
+    </script>
+  </body>
+</html>
