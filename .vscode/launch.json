@@ -6,7 +6,10 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/adapters/ide/vscode"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/adapters/ide/vscode",
+        "${workspaceFolder}/playground/vscode-test-workspace"
+      ],
       "outFiles": ["${workspaceFolder}/packages/adapters/ide/vscode/dist/**/*.js"],
       "preLaunchTask": "pnpm: build (ide-vscode)"
     }

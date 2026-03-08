@@ -5,6 +5,7 @@
   "displayName": "Execlens",
   "type": "module",
   "main": "./dist/extension.js",
+  "activationEvents": ["onStartupFinished"],
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -17,7 +18,22 @@
         "command": "execlens.openSimulator",
         "title": "Execlens: Open Simulator"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "execlens.openSimulator",
+          "when": "editorTextFocus && execlens.isFunctionUnderCursor",
+          "group": "navigation@100"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "execlens.openSimulator",
+          "when": "false"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "tsc -b"
