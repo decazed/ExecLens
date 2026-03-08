@@ -1,24 +1,27 @@
 import * as vscode from "vscode";
+import { analyzeFunctionAtCursor, type LanguageFunctionInfo } from "@execlens/adapter-tsjs";
+import { renderSimulatorPanelHtml, type SimulatorFunctionInfo } from "@execlens/ui";
+import { toLanguageSymbol } from "./mappers/document-symbol.mapper.js";
+
+type FunctionInfo = SimulatorFunctionInfo;
 
 export function activate(context: vscode.ExtensionContext): void {
   const refreshFunctionContext = async (editor: vscode.TextEditor | undefined): Promise<void> => {
-    const functionSymbol = await getFunctionSymbolUnderCursor(editor);
-    await vscode.commands.executeCommand("setContext", "execlens.isFunctionUnderCursor", Boolean(functionSymbol));
+    const functionInfo = await analyzeCurrentFunction(editor);
+    await vscode.commands.executeCommand("setContext", "execlens.isFunctionUnderCursor", Boolean(functionInfo));
   };
 
   const disposable = vscode.commands.registerCommand("execlens.openSimulator", async () => {
-    const functionName = await getFunctionNameUnderCursor();
-    const mediaRoot = vscode.Uri.joinPath(context.extensionUri, "media");
+    const functionInfo = await getFunctionInfoUnderCursor();
     const panel = vscode.window.createWebviewPanel(
       "execlens.simulator",
       "Execlens Simulator",
       vscode.ViewColumn.Beside,
       {
-        localResourceRoots: [mediaRoot]
+        enableScripts: true
       }
     );
-
-    panel.webview.html = await getWebviewHtml(panel.webview, mediaRoot, functionName);
+    panel.webview.html = getWebviewHtml(panel.webview, functionInfo);
   });
 
   void refreshFunctionContext(vscode.window.activeTextEditor);
@@ -36,42 +39,31 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {}
 
-async function getWebviewHtml(
-  webview: vscode.Webview,
-  mediaRoot: vscode.Uri,
-  functionName: string
-): Promise<string> {
-  const htmlPath = vscode.Uri.joinPath(mediaRoot, "index.html");
-  const cssPath = vscode.Uri.joinPath(mediaRoot, "styles.css");
-
-  const htmlBytes = await vscode.workspace.fs.readFile(htmlPath);
-  const html = Buffer.from(htmlBytes).toString("utf-8");
-  const stylesUri = webview.asWebviewUri(cssPath).toString();
-
-  return html
-    .replaceAll("{{cspSource}}", webview.cspSource)
-    .replaceAll("{{stylesUri}}", stylesUri)
-    .replaceAll("{{functionName}}", escapeHtml(functionName));
+function getWebviewHtml(webview: vscode.Webview, functionInfo: FunctionInfo): string {
+  const nonce = createNonce();
+  return renderSimulatorPanelHtml({
+    cspSource: webview.cspSource,
+    nonce,
+    functionInfo
+  });
 }
 
-async function getFunctionNameUnderCursor(): Promise<string> {
+async function getFunctionInfoUnderCursor(): Promise<FunctionInfo> {
   const editor = vscode.window.activeTextEditor;
-  const functionSymbol = await getFunctionSymbolUnderCursor(editor);
-  if (functionSymbol) {
-    return functionSymbol.name;
-  }
-
   if (!editor) {
-    return "No active editor";
+    return { name: "No active editor", parameters: [] };
   }
 
-  const hasSymbols = await hasAnyDocumentSymbols(editor.document.uri);
-  return hasSymbols ? "No function under cursor" : "No function found";
+  const functionInfo = await analyzeCurrentFunction(editor);
+  if (functionInfo) {
+    return functionInfo;
+  }
+
+  const symbols = await getDocumentSymbols(editor.document.uri);
+  return { name: symbols.length > 0 ? "No function under cursor" : "No function found", parameters: [] };
 }
 
-async function getFunctionSymbolUnderCursor(
-  editor: vscode.TextEditor | undefined
-): Promise<vscode.DocumentSymbol | null> {
+async function analyzeCurrentFunction(editor: vscode.TextEditor | undefined): Promise<LanguageFunctionInfo | null> {
   if (!editor) {
     return null;
   }
@@ -81,33 +73,14 @@ async function getFunctionSymbolUnderCursor(
     return null;
   }
 
-  const cursor = editor.selection.active;
-  const functionKinds = new Set<vscode.SymbolKind>([
-    vscode.SymbolKind.Function,
-    vscode.SymbolKind.Method,
-    vscode.SymbolKind.Constructor
-  ]);
-
-  const candidates = flattenDocumentSymbols(symbols).filter(
-    (symbol) => functionKinds.has(symbol.kind) && symbol.range.contains(cursor)
-  );
-  if (candidates.length === 0) {
-    return null;
-  }
-
-  let best: vscode.DocumentSymbol | null = null;
-  for (const candidate of candidates) {
-    if (!best || symbolRangeSize(editor.document, candidate) < symbolRangeSize(editor.document, best)) {
-      best = candidate;
-    }
-  }
-
-  return best;
-}
-
-async function hasAnyDocumentSymbols(documentUri: vscode.Uri): Promise<boolean> {
-  const symbols = await getDocumentSymbols(documentUri);
-  return symbols.length > 0;
+  const languageSymbols = symbols.map((symbol) => toLanguageSymbol(editor.document, symbol));
+  return analyzeFunctionAtCursor({
+    documentText: editor.document.getText(),
+    fileName: editor.document.fileName,
+    languageId: editor.document.languageId,
+    cursorOffset: editor.document.offsetAt(editor.selection.active),
+    symbols: languageSymbols
+  });
 }
 
 async function getDocumentSymbols(documentUri: vscode.Uri): Promise<vscode.DocumentSymbol[]> {
@@ -118,26 +91,11 @@ async function getDocumentSymbols(documentUri: vscode.Uri): Promise<vscode.Docum
   return symbols ?? [];
 }
 
-function flattenDocumentSymbols(symbols: vscode.DocumentSymbol[]): vscode.DocumentSymbol[] {
-  const result: vscode.DocumentSymbol[] = [];
-
-  for (const symbol of symbols) {
-    result.push(symbol);
-    result.push(...flattenDocumentSymbols(symbol.children));
+function createNonce(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let nonce = "";
+  for (let i = 0; i < 16; i += 1) {
+    nonce += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-
-  return result;
-}
-
-function symbolRangeSize(document: vscode.TextDocument, symbol: vscode.DocumentSymbol): number {
-  return document.offsetAt(symbol.range.end) - document.offsetAt(symbol.range.start);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+  return nonce;
 }
