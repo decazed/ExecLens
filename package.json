@@ -5,7 +5,7 @@
   "description": "IDE function execution simulator",
   "packageManager": "pnpm@10.6.0",
   "scripts": {
-    "build": "tsc -b tsconfig.json",
+    "build": "tsc -b tsconfig.json && pnpm --filter @execlens/ui copy:assets",
     "clean": "tsc -b tsconfig.json --clean",
     "typecheck": "tsc -b tsconfig.json --pretty",
     "dev:vscode": "pnpm --filter @execlens/ide-vscode watch"
