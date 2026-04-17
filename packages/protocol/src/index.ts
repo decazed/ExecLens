@@ -1,15 +1,49 @@
+export type SimulatorFieldOption = {
+  label: string;
+  value: string;
+};
+
+export type SimulatorStructureNode =
+  | {
+      kind: "primitive";
+      typeLabel: string;
+      control?: "text" | "boolean" | "select";
+      options?: SimulatorFieldOption[];
+      allowNull?: boolean;
+      allowUndefined?: boolean;
+    }
+  | {
+      kind: "object";
+      typeLabel: string;
+      properties: Record<string, SimulatorStructureNode>;
+      allowNull?: boolean;
+      allowUndefined?: boolean;
+    }
+  | {
+      kind: "array";
+      typeLabel: string;
+      item: SimulatorStructureNode;
+      allowNull?: boolean;
+      allowUndefined?: boolean;
+    }
+  | {
+      kind: "tuple";
+      typeLabel: string;
+      items: SimulatorStructureNode[];
+      allowNull?: boolean;
+      allowUndefined?: boolean;
+    };
+
 export type SimulatorParameterField = {
   name: string;
   typeLabel: string;
   editor: "value" | "json";
   initialValue: string;
   control?: "text" | "boolean" | "select";
-  options?: Array<{
-    label: string;
-    value: string;
-  }>;
+  options?: SimulatorFieldOption[];
   allowNull?: boolean;
   allowUndefined?: boolean;
+  structure?: SimulatorStructureNode;
 };
 
 export type SimulationTarget = {
