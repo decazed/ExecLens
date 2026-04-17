@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -14,6 +15,13 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@execlens/protocol": ["packages/protocol/src/index.ts"],
+      "@execlens/core": ["packages/core/src/index.ts"],
+      "@execlens/adapter-tsjs": ["packages/adapters/language/tsjs/src/index.ts"],
+      "@execlens/adapter-node-runtime": ["packages/adapters/runtime/node/src/index.ts"],
+      "@execlens/ui": ["packages/ui/src/index.ts"]
+    }
   }
 }
