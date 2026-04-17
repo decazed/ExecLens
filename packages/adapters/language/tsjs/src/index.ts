@@ -6,6 +6,13 @@ export type LanguageParameterField = {
   typeLabel: string;
   editor: "value" | "json";
   initialValue: string;
+  control?: "text" | "boolean" | "select";
+  options?: Array<{
+    label: string;
+    value: string;
+  }>;
+  allowNull?: boolean;
+  allowUndefined?: boolean;
 };
 
 export type LanguageFunctionInfo = {
@@ -106,7 +113,8 @@ function getFunctionParameters(input: {
       name,
       typeLabel: "unknown",
       editor: "value",
-      initialValue: ""
+      initialValue: "",
+      control: "text"
     }));
   }
 
@@ -127,7 +135,8 @@ function getFunctionParameters(input: {
       name,
       typeLabel: "unknown",
       editor: "value",
-      initialValue: ""
+      initialValue: "",
+      control: "text"
     }));
   }
 
@@ -241,10 +250,28 @@ function buildParameterFieldFromTypeNode(
     : "";
 
   if (template !== null && typeof template === "object") {
-    return { name, typeLabel, editor: "json", initialValue: JSON.stringify(template, null, 2) };
+    return {
+      name,
+      typeLabel,
+      editor: "json",
+      initialValue: JSON.stringify(template, null, 2),
+      allowNull: typeNodeAllowsNull(parameter.type),
+      allowUndefined: typeNodeAllowsUndefined(parameter.type)
+    };
   }
 
-  return { name, typeLabel, editor: "value", initialValue: primitiveTemplateToInput(template) };
+  return {
+    name,
+    typeLabel,
+    editor: "value",
+    initialValue: primitiveTemplateToInput(template),
+    ...withOptionalUiHints({
+      control: buildControlFromTypeNode(parameter.type, sourceFile, typeDeclarations),
+      options: buildOptionsFromTypeNode(parameter.type, sourceFile, typeDeclarations)
+    }),
+    allowNull: typeNodeAllowsNull(parameter.type),
+    allowUndefined: typeNodeAllowsUndefined(parameter.type)
+  };
 }
 
 function buildTemplateFromTypeNode(
@@ -440,17 +467,261 @@ function getParameterFieldsFromTypeChecker(input: {
         name,
         typeLabel,
         editor: "json",
-        initialValue: JSON.stringify(template, null, 2)
+        initialValue: JSON.stringify(template, null, 2),
+        allowNull: typeAllowsNull(parameterType),
+        allowUndefined: typeAllowsUndefined(parameterType)
       };
     }
 
+    const inputMode = buildInputModeFromType(parameterType, checker);
     return {
       name,
       typeLabel,
       editor: "value",
-      initialValue: primitiveTemplateToInput(template)
+      initialValue: primitiveTemplateToInput(template),
+      ...withOptionalUiHints(inputMode),
+      allowNull: typeAllowsNull(parameterType),
+      allowUndefined: typeAllowsUndefined(parameterType)
     };
   });
+}
+
+function withOptionalUiHints(input: {
+  control: LanguageParameterField["control"] | undefined;
+  options: Array<{ label: string; value: string }> | undefined;
+}): Pick<LanguageParameterField, "control" | "options"> | Record<string, never> {
+  return {
+    ...(input.control ? { control: input.control } : {}),
+    ...(input.options && input.options.length > 0 ? { options: input.options } : {})
+  };
+}
+
+function buildInputModeFromType(
+  type: ts.Type,
+  checker: ts.TypeChecker
+): { control: LanguageParameterField["control"] | undefined; options: Array<{ label: string; value: string }> | undefined } {
+  const coreType = unwrapNullableType(type);
+  if (coreType.flags & ts.TypeFlags.BooleanLike) {
+    return { control: "boolean", options: undefined };
+  }
+
+  const unionOptions = getLiteralUnionOptions(coreType);
+  if (unionOptions.length > 0) {
+    return { control: "select", options: unionOptions };
+  }
+
+  const enumOptions = getEnumOptions(coreType, checker);
+  if (enumOptions.length > 0) {
+    return { control: "select", options: enumOptions };
+  }
+
+  return { control: "text", options: undefined };
+}
+
+function getLiteralUnionOptions(type: ts.Type): Array<{ label: string; value: string }> {
+  if (!type.isUnion()) {
+    return [];
+  }
+
+  const options: Array<{ label: string; value: string }> = [];
+  for (const member of type.types) {
+    if (member.flags & (ts.TypeFlags.Null | ts.TypeFlags.Undefined)) {
+      continue;
+    }
+
+    const literalValue = getLiteralOptionValue(member);
+    if (literalValue === null) {
+      return [];
+    }
+
+    options.push(literalValue);
+  }
+
+  return options;
+}
+
+function getLiteralOptionValue(type: ts.Type): { label: string; value: string } | null {
+  if (type.isStringLiteral()) {
+    return { label: type.value, value: type.value };
+  }
+
+  if (type.flags & ts.TypeFlags.NumberLiteral) {
+    const numberLiteral = type as ts.NumberLiteralType;
+    return { label: String(numberLiteral.value), value: String(numberLiteral.value) };
+  }
+
+  if (type.flags & ts.TypeFlags.BooleanLiteral) {
+    const intrinsicName = (type as ts.Type & { intrinsicName?: string }).intrinsicName;
+    if (intrinsicName === "true" || intrinsicName === "false") {
+      return { label: intrinsicName, value: intrinsicName };
+    }
+  }
+
+  return null;
+}
+
+function getEnumOptions(type: ts.Type, checker: ts.TypeChecker): Array<{ label: string; value: string }> {
+  const symbol = type.aliasSymbol ?? type.getSymbol();
+  if (!symbol) {
+    return [];
+  }
+
+  const enumDeclaration = symbol.declarations?.find(ts.isEnumDeclaration);
+  if (!enumDeclaration) {
+    return [];
+  }
+
+  const options: Array<{ label: string; value: string }> = [];
+  for (const member of enumDeclaration.members) {
+    const label = member.name.getText();
+    const constantValue = checker.getConstantValue(member);
+
+    if (typeof constantValue === "string" || typeof constantValue === "number") {
+      options.push({ label, value: String(constantValue) });
+      continue;
+    }
+
+    if (member.initializer && ts.isStringLiteral(member.initializer)) {
+      options.push({ label, value: member.initializer.text });
+      continue;
+    }
+
+    if (member.initializer && ts.isNumericLiteral(member.initializer)) {
+      options.push({ label, value: member.initializer.text });
+    }
+  }
+
+  return options;
+}
+
+function unwrapNullableType(type: ts.Type): ts.Type {
+  if (!type.isUnion()) {
+    return type;
+  }
+
+  const filtered = type.types.filter((member) => (member.flags & (ts.TypeFlags.Null | ts.TypeFlags.Undefined)) === 0);
+  if (filtered.length === 1 && filtered[0]) {
+    return filtered[0];
+  }
+
+  return type;
+}
+
+function typeAllowsNull(type: ts.Type): boolean {
+  return type.isUnion() && type.types.some((member) => (member.flags & ts.TypeFlags.Null) !== 0);
+}
+
+function typeAllowsUndefined(type: ts.Type): boolean {
+  return type.isUnion() && type.types.some((member) => (member.flags & ts.TypeFlags.Undefined) !== 0);
+}
+
+function typeNodeAllowsNull(typeNode: ts.TypeNode | undefined): boolean {
+  return (
+    !!typeNode &&
+    ts.isUnionTypeNode(typeNode) &&
+    typeNode.types.some((member) => member.kind === ts.SyntaxKind.NullKeyword)
+  );
+}
+
+function typeNodeAllowsUndefined(typeNode: ts.TypeNode | undefined): boolean {
+  return (
+    !!typeNode &&
+    ts.isUnionTypeNode(typeNode) &&
+    typeNode.types.some((member) => member.kind === ts.SyntaxKind.UndefinedKeyword)
+  );
+}
+
+function buildControlFromTypeNode(
+  typeNode: ts.TypeNode | undefined,
+  sourceFile: ts.SourceFile,
+  typeDeclarations: Map<string, TypeDeclaration>
+): LanguageParameterField["control"] {
+  if (!typeNode) {
+    return "text";
+  }
+
+  const coreTypeNode = unwrapNullableTypeNode(typeNode);
+  if (coreTypeNode.kind === ts.SyntaxKind.BooleanKeyword) {
+    return "boolean";
+  }
+
+  if (buildOptionsFromTypeNode(coreTypeNode, sourceFile, typeDeclarations)?.length) {
+    return "select";
+  }
+
+  return "text";
+}
+
+function buildOptionsFromTypeNode(
+  typeNode: ts.TypeNode | undefined,
+  sourceFile: ts.SourceFile,
+  typeDeclarations: Map<string, TypeDeclaration>
+): Array<{ label: string; value: string }> | undefined {
+  if (!typeNode) {
+    return undefined;
+  }
+
+  const coreTypeNode = unwrapNullableTypeNode(typeNode);
+  if (ts.isUnionTypeNode(coreTypeNode)) {
+    const options = coreTypeNode.types
+      .filter((member) => member.kind !== ts.SyntaxKind.NullKeyword && member.kind !== ts.SyntaxKind.UndefinedKeyword)
+      .map((member) => getLiteralOptionFromTypeNode(member))
+      .filter((member): member is { label: string; value: string } => member !== null);
+
+    if (options.length === coreTypeNode.types.filter((member) => member.kind !== ts.SyntaxKind.NullKeyword && member.kind !== ts.SyntaxKind.UndefinedKeyword).length) {
+      return options;
+    }
+  }
+
+  if (ts.isTypeReferenceNode(coreTypeNode)) {
+    const typeName = coreTypeNode.typeName.getText(sourceFile);
+    const declaration = typeDeclarations.get(typeName);
+    if (declaration && ts.isTypeAliasDeclaration(declaration)) {
+      return buildOptionsFromTypeNode(declaration.type, sourceFile, typeDeclarations);
+    }
+  }
+
+  return undefined;
+}
+
+function getLiteralOptionFromTypeNode(typeNode: ts.TypeNode): { label: string; value: string } | null {
+  if (!ts.isLiteralTypeNode(typeNode)) {
+    return null;
+  }
+
+  if (ts.isStringLiteral(typeNode.literal)) {
+    return { label: typeNode.literal.text, value: typeNode.literal.text };
+  }
+
+  if (ts.isNumericLiteral(typeNode.literal)) {
+    return { label: typeNode.literal.text, value: typeNode.literal.text };
+  }
+
+  if (typeNode.literal.kind === ts.SyntaxKind.TrueKeyword) {
+    return { label: "true", value: "true" };
+  }
+
+  if (typeNode.literal.kind === ts.SyntaxKind.FalseKeyword) {
+    return { label: "false", value: "false" };
+  }
+
+  return null;
+}
+
+function unwrapNullableTypeNode(typeNode: ts.TypeNode): ts.TypeNode {
+  if (!ts.isUnionTypeNode(typeNode)) {
+    return typeNode;
+  }
+
+  const filtered = typeNode.types.filter(
+    (member) => member.kind !== ts.SyntaxKind.NullKeyword && member.kind !== ts.SyntaxKind.UndefinedKeyword
+  );
+
+  if (filtered.length === 1 && filtered[0]) {
+    return filtered[0];
+  }
+
+  return typeNode;
 }
 
 function createTypeCheckerContext(input: {

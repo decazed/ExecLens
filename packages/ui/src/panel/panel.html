@@ -28,7 +28,10 @@
         <p class="label">Parameters</p>
         <form id="run-form" class="run-form">
           {{parameterFieldsHtml}}
-          <button type="submit" class="run-button">Run Simulation</button>
+          <div class="action-row">
+            <button id="run-button" type="submit" class="run-button">Run Simulation</button>
+            <button id="stop-button" type="button" class="stop-button" disabled>Stop Simulation</button>
+          </div>
         </form>
       </section>
 
@@ -37,6 +40,9 @@
         <pre id="run-output" class="output">Click Run to preview input payload.</pre>
       </section>
     </main>
+    <script id="execlens-function-info" type="application/json">
+{{functionInfoJson}}
+    </script>
     <script nonce="{{nonce}}">
 {{script}}
     </script>

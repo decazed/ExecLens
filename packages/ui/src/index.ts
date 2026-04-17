@@ -1,17 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-export type SimulatorParameterField = {
-  name: string;
-  typeLabel: string;
-  editor: "value" | "json";
-  initialValue: string;
-};
+import type { SimulationTarget, SimulatorParameterField } from "@execlens/protocol";
 
 export type SimulatorFunctionInfo = {
   name: string;
   parameters: SimulatorParameterField[];
+  target?: SimulationTarget;
 };
 
 type RenderSimulatorPanelHtmlInput = {
@@ -29,6 +24,7 @@ export function renderSimulatorPanelHtml(input: RenderSimulatorPanelHtmlInput): 
     .replaceAll("{{nonce}}", nonce)
     .replaceAll("{{styles}}", assets.styles.trim())
     .replaceAll("{{script}}", assets.script.trim())
+    .replaceAll("{{functionInfoJson}}", escapeHtmlForHtmlText(JSON.stringify(functionInfo)))
     .replaceAll("{{functionName}}", escapeHtml(functionInfo.name))
     .replaceAll("{{parameterFieldsHtml}}", buildParameterFieldsHtml(functionInfo.parameters));
 }
@@ -43,22 +39,96 @@ function buildParameterFieldsHtml(parameters: SimulatorParameterField[]): string
       const escapedName = escapeHtml(parameter.name);
       const escapedType = escapeHtml(parameter.typeLabel);
       const escapedValue = escapeHtml(parameter.initialValue);
-      const inputHtml =
-        parameter.editor === "json"
-          ? `<textarea class="json-input" data-input-json rows="8">${escapedValue}</textarea>`
-          : `<input class="field-input" type="text" data-input-raw value="${escapedValue}" />`;
+      const inputHtml = buildParameterInputHtml(parameter, escapedValue);
+      const nullabilityControlsHtml = buildNullabilityControlsHtml(parameter);
 
       return [
-        `<div class="field" data-param-name="${escapedName}" data-editor="${parameter.editor}">`,
+        `<div class="field" data-param-name="${escapedName}" data-editor="${parameter.editor}" data-type-label="${escapedType}">`,
         '  <div class="field-header">',
         `    <span>${escapedName}</span>`,
         `    <span class="type-label">${escapedType}</span>`,
         "  </div>",
         `  ${inputHtml}`,
+        `  ${nullabilityControlsHtml}`,
+        '  <p class="field-error" data-field-error hidden></p>',
         "</div>"
       ].join("\n");
     })
     .join("\n");
+}
+
+function buildParameterInputHtml(parameter: SimulatorParameterField, escapedValue: string): string {
+  if (parameter.editor === "json") {
+    if (looksLikeTopLevelArrayJson(parameter.initialValue)) {
+      const isTuple = looksLikeTupleType(parameter.typeLabel);
+      return [
+        `<div class="array-editor" data-array-editor data-array-mode="${isTuple ? "tuple" : "array"}" data-array-initial-json="${escapedValue}">`,
+        '  <div class="array-items" data-array-items></div>',
+        `${isTuple ? "" : '  <button type="button" class="array-add-button" data-array-add>Add item</button>'}`,
+        "</div>"
+      ].join("\n");
+    }
+
+    return `<textarea class="json-input" data-input-json rows="8">${escapedValue}</textarea>`;
+  }
+
+  if (parameter.control === "boolean") {
+    const currentValue = parameter.initialValue === "true" ? "true" : "false";
+    return [
+      '<select class="field-select" data-input-select>',
+      `  <option value="true"${currentValue === "true" ? " selected" : ""}>true</option>`,
+      `  <option value="false"${currentValue === "false" ? " selected" : ""}>false</option>`,
+      "</select>"
+    ].join("\n");
+  }
+
+  if (parameter.control === "select" && parameter.options && parameter.options.length > 0) {
+    const optionsHtml = parameter.options
+      .map((option) => {
+        const escapedOptionLabel = escapeHtml(option.label);
+        const escapedOptionValue = escapeHtml(option.value);
+        const isSelected = option.value === parameter.initialValue;
+        return `  <option value="${escapedOptionValue}"${isSelected ? " selected" : ""}>${escapedOptionLabel}</option>`;
+      })
+      .join("\n");
+
+    return ['<select class="field-select" data-input-select>', optionsHtml, "</select>"].join("\n");
+  }
+
+  return `<input class="field-input" type="text" data-input-raw value="${escapedValue}" />`;
+}
+
+function looksLikeTopLevelArrayJson(initialValue: string): boolean {
+  try {
+    return Array.isArray(JSON.parse(initialValue));
+  } catch {
+    return false;
+  }
+}
+
+function looksLikeTupleType(typeLabel: string): boolean {
+  const trimmed = typeLabel.trim();
+  return trimmed.startsWith("[") && trimmed.endsWith("]");
+}
+
+function buildNullabilityControlsHtml(parameter: SimulatorParameterField): string {
+  if (!parameter.allowNull && !parameter.allowUndefined) {
+    return "";
+  }
+
+  const controls: string[] = ['<div class="nullability-row">'];
+  if (parameter.allowNull) {
+    controls.push(
+      '  <label class="toggle-option"><input type="checkbox" data-null-toggle /> <span>Use null</span></label>'
+    );
+  }
+  if (parameter.allowUndefined) {
+    controls.push(
+      '  <label class="toggle-option"><input type="checkbox" data-undefined-toggle /> <span>Use undefined</span></label>'
+    );
+  }
+  controls.push("</div>");
+  return controls.join("\n");
 }
 
 function escapeHtml(value: string): string {
@@ -68,6 +138,10 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function escapeHtmlForHtmlText(value: string): string {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 type PanelAssets = {

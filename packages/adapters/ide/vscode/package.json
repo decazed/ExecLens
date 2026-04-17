@@ -39,7 +39,9 @@
     "build": "tsc -b"
   },
   "dependencies": {
+    "@execlens/adapter-node-runtime": "workspace:*",
     "@execlens/adapter-tsjs": "workspace:*",
+    "@execlens/core": "workspace:*",
     "@execlens/ui": "workspace:*"
   },
   "devDependencies": {

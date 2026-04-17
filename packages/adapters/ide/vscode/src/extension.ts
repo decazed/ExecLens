@@ -1,9 +1,13 @@
 import * as vscode from "vscode";
 import { analyzeFunctionAtCursor, type LanguageFunctionInfo } from "@execlens/adapter-tsjs";
+import { simulateFunction } from "@execlens/core";
+import { NodeRuntimeAdapter } from "@execlens/adapter-node-runtime";
+import type { SimulationRequest, SimulatorParameterField } from "@execlens/protocol";
 import { renderSimulatorPanelHtml, type SimulatorFunctionInfo } from "@execlens/ui";
 import { toLanguageSymbol } from "./mappers/document-symbol.mapper.js";
 
 type FunctionInfo = SimulatorFunctionInfo;
+const runtimeAdapter = new NodeRuntimeAdapter();
 
 export function activate(context: vscode.ExtensionContext): void {
   const refreshFunctionContext = async (editor: vscode.TextEditor | undefined): Promise<void> => {
@@ -21,7 +25,76 @@ export function activate(context: vscode.ExtensionContext): void {
         enableScripts: true
       }
     );
+    let currentAbortController: AbortController | null = null;
+    let currentRequestId: string | null = null;
+
     panel.webview.html = getWebviewHtml(panel.webview, functionInfo);
+    panel.webview.onDidReceiveMessage(async (message) => {
+      if (message?.type === "execlens.cancelSimulation") {
+        const requestId = typeof message.payload?.requestId === "string" ? message.payload.requestId : null;
+        if (requestId && currentAbortController && currentRequestId === requestId) {
+          currentAbortController.abort();
+        }
+        return;
+      }
+
+      if (message?.type !== "execlens.runSimulation") {
+        return;
+      }
+
+      const request = message.payload
+        ? ({
+            target: message.payload.target,
+            args: message.payload.args
+          } satisfies SimulationRequest)
+        : undefined;
+      if (!request) {
+        return;
+      }
+
+      const requestId = typeof message.payload?.requestId === "string" ? message.payload.requestId : null;
+      if (!requestId) {
+        return;
+      }
+
+      currentAbortController = new AbortController();
+      currentRequestId = requestId;
+
+      try {
+        const result = await simulateFunction(runtimeAdapter, request, currentAbortController.signal);
+
+        if (result.ok === false && result.errorName === "AbortError" && currentRequestId === requestId) {
+          await panel.webview.postMessage({
+            type: "execlens.simulationCancelled",
+            payload: { requestId }
+          });
+          return;
+        }
+
+        if (currentRequestId !== requestId) {
+          return;
+        }
+
+        await panel.webview.postMessage({
+          type: "execlens.simulationResult",
+          payload: {
+            requestId,
+            result
+          }
+        });
+      } finally {
+        if (currentRequestId === requestId) {
+          currentAbortController = null;
+          currentRequestId = null;
+        }
+      }
+    });
+
+    panel.onDidDispose(() => {
+      currentAbortController?.abort();
+      currentAbortController = null;
+      currentRequestId = null;
+    });
   });
 
   void refreshFunctionContext(vscode.window.activeTextEditor);
@@ -56,7 +129,15 @@ async function getFunctionInfoUnderCursor(): Promise<FunctionInfo> {
 
   const functionInfo = await analyzeCurrentFunction(editor);
   if (functionInfo) {
-    return functionInfo;
+    return {
+      ...functionInfo,
+      target: {
+        kind: "function",
+        filePath: editor.document.fileName,
+        functionName: functionInfo.name,
+        parameterNames: functionInfo.parameters.map((parameter: SimulatorParameterField) => parameter.name)
+      }
+    };
   }
 
   const symbols = await getDocumentSymbols(editor.document.uri);
