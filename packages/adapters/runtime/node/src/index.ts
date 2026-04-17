@@ -4,14 +4,22 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import ts from "typescript";
-import type { RuntimeAdapter, SimulationAbortSignal, SimulationRequest, SimulationResult } from "@execlens/protocol";
+import type {
+  RuntimeAdapter,
+  SimulationAbortSignal,
+  SimulationRequest,
+  SimulationResult,
+} from "@execlens/protocol";
 
-const DEFAULT_TIMEOUT_MS = 2_000;
+const DEFAULT_TIMEOUT_MS = 10_000;
 
 export class NodeRuntimeAdapter implements RuntimeAdapter {
   public constructor(private readonly timeoutMs = DEFAULT_TIMEOUT_MS) {}
 
-  public async run(request: SimulationRequest, signal?: SimulationAbortSignal): Promise<SimulationResult> {
+  public async run(
+    request: SimulationRequest,
+    signal?: SimulationAbortSignal
+  ): Promise<SimulationResult> {
     const startedAt = Date.now();
     const args = request.target.parameterNames.map((name) => request.args[name]);
 
@@ -23,7 +31,7 @@ export class NodeRuntimeAdapter implements RuntimeAdapter {
             moduleSpecifier: executionArtifact.moduleSpecifier,
             functionName: request.target.functionName,
             args,
-            timeoutMs: this.timeoutMs
+            timeoutMs: this.timeoutMs,
           },
           signal
         );
@@ -35,8 +43,8 @@ export class NodeRuntimeAdapter implements RuntimeAdapter {
             returnValue: payload.returnValue,
             trace: [
               { type: "start", at: startedAt },
-              { type: "return", at: Date.now(), value: payload.returnValue }
-            ]
+              { type: "return", at: Date.now(), value: payload.returnValue },
+            ],
           };
         }
 
@@ -52,9 +60,9 @@ export class NodeRuntimeAdapter implements RuntimeAdapter {
               type: "throw",
               at: Date.now(),
               errorName: payload.errorName,
-              errorMessage: payload.errorMessage
-            }
-          ]
+              errorMessage: payload.errorMessage,
+            },
+          ],
         };
       } finally {
         if (executionArtifact.cleanupDir) {
@@ -74,9 +82,9 @@ export class NodeRuntimeAdapter implements RuntimeAdapter {
             type: "throw",
             at: Date.now(),
             errorName: error instanceof Error ? error.name : "SimulationError",
-            errorMessage: error instanceof Error ? error.message : String(error)
-          }
-        ]
+            errorMessage: error instanceof Error ? error.message : String(error),
+          },
+        ],
       };
     }
   }
@@ -106,16 +114,16 @@ async function transpileTypeScriptFile(filePath: string): Promise<ExecutionArtif
   const transpiled = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.ES2022,
-      target: ts.ScriptTarget.ES2022
+      target: ts.ScriptTarget.ES2022,
     },
-    fileName: filePath
+    fileName: filePath,
   });
 
   const outputPath = path.join(tempDir, `${path.basename(filePath, path.extname(filePath))}.mjs`);
   await writeFile(outputPath, transpiled.outputText, "utf-8");
   return {
     moduleSpecifier: pathToFileURL(outputPath).href,
-    cleanupDir: tempDir
+    cleanupDir: tempDir,
   };
 }
 
@@ -135,7 +143,10 @@ async function executeInChildProcess(
   const runnerPath = path.join(tempDir, "runner.mjs");
   await writeFile(runnerPath, createRunnerSource(), "utf-8");
 
-  return new Promise<{ ok: true; returnValue: unknown } | { ok: false; errorName: string; errorMessage: string; stack?: string }>((resolve, reject) => {
+  return new Promise<
+    | { ok: true; returnValue: unknown }
+    | { ok: false; errorName: string; errorMessage: string; stack?: string }
+  >((resolve, reject) => {
     const child = spawn(process.execPath, [runnerPath], { stdio: ["pipe", "pipe", "pipe"] });
 
     const timer = setTimeout(() => {
@@ -185,7 +196,11 @@ async function executeInChildProcess(
       }
 
       try {
-        resolve(JSON.parse(stdout) as { ok: true; returnValue: unknown } | { ok: false; errorName: string; errorMessage: string; stack?: string });
+        resolve(
+          JSON.parse(stdout) as
+            | { ok: true; returnValue: unknown }
+            | { ok: false; errorName: string; errorMessage: string; stack?: string }
+        );
       } catch {
         reject(new Error(`Unable to parse runtime output: ${stdout}`));
       }
@@ -195,7 +210,7 @@ async function executeInChildProcess(
       JSON.stringify({
         moduleSpecifier: input.moduleSpecifier,
         functionName: input.functionName,
-        args: input.args
+        args: input.args,
       })
     );
     child.stdin.end();

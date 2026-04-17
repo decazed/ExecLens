@@ -43,7 +43,7 @@ function buildParameterFieldsHtml(parameters: SimulatorParameterField[]): string
       const nullabilityControlsHtml = buildNullabilityControlsHtml(parameter);
 
       return [
-        `<div class="field" data-param-name="${escapedName}" data-editor="${parameter.editor}" data-type-label="${escapedType}">`,
+        `<div class="field" data-param-name="${escapedName}" data-editor="${parameter.editor}" data-type-label="${escapedType}"${parameter.structure ? ` data-structure-json="${escapeHtml(JSON.stringify(parameter.structure))}"` : ""}>`,
         '  <div class="field-header">',
         `    <span>${escapedName}</span>`,
         `    <span class="type-label">${escapedType}</span>`,
@@ -59,8 +59,12 @@ function buildParameterFieldsHtml(parameters: SimulatorParameterField[]): string
 
 function buildParameterInputHtml(parameter: SimulatorParameterField, escapedValue: string): string {
   if (parameter.editor === "json") {
-    if (looksLikeTopLevelArrayJson(parameter.initialValue)) {
-      const isTuple = looksLikeTupleType(parameter.typeLabel);
+    if (parameter.structure?.kind === "object") {
+      return `<div class="object-editor" data-object-editor data-object-initial-json="${escapedValue}"></div>`;
+    }
+
+    if (parameter.structure?.kind === "array" || parameter.structure?.kind === "tuple") {
+      const isTuple = parameter.structure.kind === "tuple";
       return [
         `<div class="array-editor" data-array-editor data-array-mode="${isTuple ? "tuple" : "array"}" data-array-initial-json="${escapedValue}">`,
         '  <div class="array-items" data-array-items></div>',
@@ -96,19 +100,6 @@ function buildParameterInputHtml(parameter: SimulatorParameterField, escapedValu
   }
 
   return `<input class="field-input" type="text" data-input-raw value="${escapedValue}" />`;
-}
-
-function looksLikeTopLevelArrayJson(initialValue: string): boolean {
-  try {
-    return Array.isArray(JSON.parse(initialValue));
-  } catch {
-    return false;
-  }
-}
-
-function looksLikeTupleType(typeLabel: string): boolean {
-  const trimmed = typeLabel.trim();
-  return trimmed.startsWith("[") && trimmed.endsWith("]");
 }
 
 function buildNullabilityControlsHtml(parameter: SimulatorParameterField): string {
