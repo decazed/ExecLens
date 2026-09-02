@@ -1,0 +1,71 @@
+name: Bug report
+description: Something in Execlens behaves incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill in the sections below.
+        For security issues, do not use this form — see SECURITY.md.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what actually happened.
+      placeholder: |
+        1. Opened a file under playground/languages/tsjs/src
+        2. Placed the cursor in function `foo`
+        3. Ran "Execlens: Open Simulator"
+        4. Expected ... but got ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest function or snippet that triggers the bug, if you can isolate one.
+      render: typescript
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the system is involved, if you know.
+      options:
+        - Not sure
+        - Function analysis (language adapter)
+        - Simulation / runtime execution
+        - Simulator panel / UI
+        - VS Code integration
+        - Core / protocol
+        - Build / tooling
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: The commit SHA or release you are on.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, VS Code version, Node version (`node -v`), pnpm version.
+      placeholder: |
+        OS: Windows 11
+        VS Code: 1.96.0
+        Node: v22.x
+        pnpm: 10.6.0
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output from the extension host, terminal, or failing test.
+      render: shell
+    validations:
+      required: false

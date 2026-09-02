@@ -1,0 +1,70 @@
+name: Adapter proposal
+description: Propose a new language, IDE, or runtime adapter.
+labels: ["adapter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Execlens grows through adapters. Open one issue per adapter so it can be
+        discussed and tracked. Read docs/ADAPTERS.md and docs/ARCHITECTURE.md first.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Adapter kind
+      options:
+        - Language (packages/adapters/language/<id>)
+        - IDE (packages/adapters/ide/<id>)
+        - Runtime (packages/adapters/runtime/<id>)
+    validations:
+      required: true
+  - type: input
+    id: id
+    attributes:
+      label: Proposed adapter id
+      description: Lowercase, e.g. `python`, `jetbrains`, `browser`.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Who needs this and what does it unlock.
+    validations:
+      required: true
+  - type: textarea
+    id: analysis-or-runtime
+    attributes:
+      label: How analysis / execution would work
+      description: >
+        For a language adapter: how you would extract the function and its
+        parameter fields (parser, compiler API, LSP, ...). For a runtime adapter:
+        how you would load and call the target, and enforce timeout/cancellation.
+        For an IDE adapter: how you would obtain document text, cursor offset, and
+        symbols, and where the panel would live.
+    validations:
+      required: true
+  - type: textarea
+    id: protocol-changes
+    attributes:
+      label: Protocol changes needed
+      description: >
+        Does this need a new contract in `@execlens/protocol` (new target kind,
+        parameter capability, trace event, port)? Describe it, or state "none".
+    validations:
+      required: true
+  - type: textarea
+    id: playground
+    attributes:
+      label: Playground plan
+      description: >
+        Which scenarios would live under `playground/languages/<id>` (for a
+        language) and how they map to the coverage stages in RELEASE_GATE.md.
+    validations:
+      required: false
+  - type: checkboxes
+    id: commitment
+    attributes:
+      label: Contribution
+      options:
+        - label: I intend to implement this adapter myself.
+        - label: I am proposing it for someone else to pick up.
