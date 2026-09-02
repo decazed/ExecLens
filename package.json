@@ -8,10 +8,22 @@
     "build": "tsc -b tsconfig.json && pnpm --filter @execlens/ui copy:assets",
     "clean": "tsc -b tsconfig.json --clean",
     "typecheck": "tsc -b tsconfig.json --pretty",
+    "architecture:check": "node ./scripts/check-architecture.mjs",
+    "test": "vitest run",
+    "test:all": "vitest run",
+    "test:unit": "vitest run test/packages",
+    "test:playground": "vitest run test/playground",
+    "test:ui": "vitest run test/packages/ui",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "quality": "pnpm architecture:check && pnpm typecheck && pnpm test:all && pnpm build",
     "dev:vscode": "pnpm --filter @execlens/ide-vscode watch"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
-    "typescript": "^5.8.2"
+    "@vitest/coverage-v8": "^4.1.10",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.10"
   }
 }

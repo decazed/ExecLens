@@ -42,6 +42,7 @@
     "@execlens/adapter-node-runtime": "workspace:*",
     "@execlens/adapter-tsjs": "workspace:*",
     "@execlens/core": "workspace:*",
+    "@execlens/protocol": "workspace:*",
     "@execlens/ui": "workspace:*"
   },
   "devDependencies": {

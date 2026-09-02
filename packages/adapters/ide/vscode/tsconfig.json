@@ -14,5 +14,6 @@
     { "path": "../../runtime/node" },
     { "path": "../../../ui" }
   ],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }
