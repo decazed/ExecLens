@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
-import { simulateFunction } from "@execlens/core";
-import type { RuntimeAdapter, SimulationRequest, SimulatorFunctionInfo } from "@execlens/protocol";
+import { selectRuntimeAdapter, simulateFunction } from "@execlens/core";
+import type { RuntimeAdapter, SimulationRequest, SimulationResult, SimulatorFunctionInfo } from "@execlens/protocol";
 import { renderSimulatorWebviewHtml } from "./webview/simulator-webview.js";
 
 export type OpenSimulatorPanelInput = {
   functionInfo: SimulatorFunctionInfo;
-  runtimeAdapter: RuntimeAdapter;
+  runtimeAdapters: readonly RuntimeAdapter[];
 };
 
 type RunSimulationMessage = {
@@ -36,7 +36,7 @@ export function openSimulatorPanel(input: OpenSimulatorPanelInput): vscode.Webvi
     }
   );
 
-  const controller = new SimulatorPanelController(panel, input.runtimeAdapter);
+  const controller = new SimulatorPanelController(panel, input.runtimeAdapters);
   panel.webview.html = renderSimulatorWebviewHtml(panel.webview, input.functionInfo);
   controller.start();
   return panel;
@@ -48,7 +48,7 @@ class SimulatorPanelController {
 
   public constructor(
     private readonly panel: vscode.WebviewPanel,
-    private readonly runtimeAdapter: RuntimeAdapter
+    private readonly runtimeAdapters: readonly RuntimeAdapter[]
   ) {}
 
   public start(): void {
@@ -86,11 +86,20 @@ class SimulatorPanelController {
       return;
     }
 
+    const runtimeAdapter = selectRuntimeAdapter(this.runtimeAdapters, request.target);
+    if (!runtimeAdapter) {
+      await this.panel.webview.postMessage({
+        type: "execlens.simulationResult",
+        payload: { requestId, result: noRuntimeAdapterResult(request) }
+      });
+      return;
+    }
+
     this.currentAbortController = new AbortController();
     this.currentRequestId = requestId;
 
     try {
-      const result = await simulateFunction(this.runtimeAdapter, request, this.currentAbortController.signal);
+      const result = await simulateFunction(runtimeAdapter, request, this.currentAbortController.signal);
 
       if (result.ok === false && result.errorName === "AbortError" && this.currentRequestId === requestId) {
         await this.panel.webview.postMessage({
@@ -124,6 +133,16 @@ class SimulatorPanelController {
     this.currentAbortController = null;
     this.currentRequestId = null;
   }
+}
+
+function noRuntimeAdapterResult(request: SimulationRequest): SimulationResult {
+  return {
+    ok: false,
+    durationMs: 0,
+    errorName: "NoRuntimeAdapter",
+    errorMessage: `No runtime adapter can run ${request.target.filePath}.`,
+    trace: []
+  };
 }
 
 function toSimulationRequest(payload: RunSimulationMessage["payload"]): SimulationRequest | null {

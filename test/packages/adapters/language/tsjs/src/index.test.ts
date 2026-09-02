@@ -13,6 +13,17 @@ afterEach(async () => {
 });
 
 describe("TsJsLanguageAdapter", () => {
+  it("advertises its id and the TS/JS language ids it can analyze", () => {
+    const adapter = new TsJsLanguageAdapter();
+
+    expect(adapter.id).toBe("tsjs");
+    expect(adapter.canAnalyze("typescript")).toBe(true);
+    expect(adapter.canAnalyze("typescriptreact")).toBe(true);
+    expect(adapter.canAnalyze("javascript")).toBe(true);
+    expect(adapter.canAnalyze("javascriptreact")).toBe(true);
+    expect(adapter.canAnalyze("python")).toBe(false);
+  });
+
   it("returns null when the cursor is outside function symbols", () => {
     const source = "const value = 1;";
 

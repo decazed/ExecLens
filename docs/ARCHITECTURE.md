@@ -35,23 +35,38 @@ pnpm architecture:check
 
 `LanguageAdapter`
 
-- Input: IDE-neutral document text, cursor offset, and document symbols.
-- Output: function name and parameter fields.
+- `id`: stable identifier, e.g. `"tsjs"`.
+- `canAnalyze(languageId)`: whether the adapter handles a given IDE language id.
+- `analyzeFunctionAtCursor(input)`: IDE-neutral document text, cursor offset, and
+  document symbols in; function name and parameter fields out.
 - Implemented by language packages such as `@execlens/adapter-tsjs`.
 
 `RuntimeAdapter`
 
-- Input: simulation target and positional arguments.
-- Output: low-level execution result.
+- `id`: stable identifier, e.g. `"node"`.
+- `canRun(target)`: whether the adapter can execute a given simulation target.
+- `execute(request, signal?)`: simulation target and positional arguments in;
+  low-level execution result out.
 - Implemented by runtime packages such as `@execlens/adapter-node-runtime`.
+
+## Adapter Selection
+
+Composition roots hold a set of adapters, not a single one. `core` exposes
+`selectLanguageAdapter(adapters, languageId)` and
+`selectRuntimeAdapter(adapters, target)`, which return the first adapter whose
+`canAnalyze` / `canRun` accepts the input, or `null`. This keeps selection
+IDE-neutral and lets an IDE adapter register several language or runtime adapters
+without special-casing any of them.
 
 ## Current VS Code Flow
 
 1. VS Code maps `vscode.DocumentSymbol` to `LanguageDocumentSymbol`.
-2. VS Code calls `analyzeFunctionContext()` from `core` with `TsJsLanguageAdapter`.
+2. VS Code picks a language adapter with `selectLanguageAdapter()` and calls
+   `analyzeFunctionContext()` from `core` with it.
 3. UI renders the returned `SimulatorFunctionInfo`.
 4. The panel posts `execlens.runSimulation`.
-5. VS Code calls `simulateFunction()` from `core` with `NodeRuntimeAdapter`.
+5. VS Code picks a runtime adapter with `selectRuntimeAdapter()` and calls
+   `simulateFunction()` from `core` with it.
 6. Core builds duration, trace, success/failure result.
 7. UI renders the simulation result.
 

@@ -27,13 +27,24 @@ Minimal shape:
 ```ts
 import type { LanguageAdapter, LanguageAnalysisInput, LanguageFunctionInfo } from "@execlens/protocol";
 
+const LANGUAGE_IDS = ["example", "examplereact"];
+
 export class ExampleLanguageAdapter implements LanguageAdapter {
+  public readonly id = "example";
+
+  public canAnalyze(languageId: string): boolean {
+    return LANGUAGE_IDS.includes(languageId);
+  }
+
   public analyzeFunctionAtCursor(input: LanguageAnalysisInput): LanguageFunctionInfo | null {
     // Parse/analyze the source file and return a function description.
     return null;
   }
 }
 ```
+
+`id` must be stable and unique across language adapters. `canAnalyze` lets a
+composition root pick this adapter from a set via `selectLanguageAdapter`.
 
 ## Add an IDE Adapter
 
@@ -62,7 +73,9 @@ Create a package under `packages/adapters/runtime/<name>`.
 It should:
 
 - depend on `@execlens/protocol`
-- implement `RuntimeAdapter`
+- implement `RuntimeAdapter`, including a stable `id` and a `canRun(target)`
+  predicate (usually a file-extension or target-kind check) used by
+  `selectRuntimeAdapter`
 - return `RuntimeExecutionResult`
 - enforce runtime-specific timeout/cancellation behavior when possible
 

@@ -131,3 +131,13 @@ pnpm test:coverage
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for adapter boundaries, test layout, and
 pull request guidance.
+
+## Security
+
+Execlens executes code from the workspace you open it in. Only run it on code you
+trust. See [SECURITY.md](SECURITY.md) for the trust model and how to report a
+vulnerability.
+
+## License
+
+[MIT](LICENSE) © decazed and Execlens contributors.

@@ -11,6 +11,16 @@ afterEach(async () => {
 });
 
 describe("NodeRuntimeAdapter", () => {
+  it("advertises its id and the file types it can run", () => {
+    const adapter = new NodeRuntimeAdapter();
+
+    expect(adapter.id).toBe("node");
+    for (const ext of [".ts", ".mts", ".cts", ".tsx", ".js", ".mjs", ".cjs"]) {
+      expect(adapter.canRun({ kind: "function", filePath: `m${ext}`, functionName: "f", parameterNames: [] })).toBe(true);
+    }
+    expect(adapter.canRun({ kind: "function", filePath: "m.py", functionName: "f", parameterNames: [] })).toBe(false);
+  });
+
   it("executes an exported TypeScript function in a child process", async () => {
     const filePath = await writeTempFile(
       "math.ts",

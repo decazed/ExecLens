@@ -54,6 +54,14 @@ export type SimulationFailure = {
 export type SimulationResult = SimulationSuccess | SimulationFailure;
 
 export type RuntimeAdapter = {
+  /** Stable identifier for this adapter, e.g. `"node"`. */
+  readonly id: string;
+  /**
+   * Whether this adapter can execute the given target (for example based on the
+   * target file extension or kind). A composition root uses this to pick an
+   * adapter from a set.
+   */
+  canRun(target: SimulationTarget): boolean;
   execute(request: RuntimeExecutionRequest, signal?: SimulationAbortSignal): Promise<RuntimeExecutionResult>;
 };
 

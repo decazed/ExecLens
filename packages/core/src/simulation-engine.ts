@@ -5,8 +5,20 @@ import type {
   RuntimeExecutionResult,
   SimulationAbortSignal,
   SimulationRequest,
-  SimulationResult
+  SimulationResult,
+  SimulationTarget
 } from "@execlens/protocol";
+
+/**
+ * Pick the first runtime adapter that reports it can run `target`.
+ * Returns `null` when no adapter matches.
+ */
+export function selectRuntimeAdapter(
+  adapters: readonly RuntimeAdapter[],
+  target: SimulationTarget
+): RuntimeAdapter | null {
+  return adapters.find((adapter) => adapter.canRun(target)) ?? null;
+}
 
 export type SimulationEngineOptions = {
   timeoutMs?: number;

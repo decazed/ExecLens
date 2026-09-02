@@ -2,7 +2,16 @@
   "name": "execlens",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "IDE function execution simulator",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/decazed/ExecLens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/decazed/ExecLens/issues"
+  },
+  "homepage": "https://github.com/decazed/ExecLens#readme",
   "packageManager": "pnpm@10.6.0",
   "scripts": {
     "build": "tsc -b tsconfig.json && pnpm --filter @execlens/ui copy:assets",
@@ -25,5 +34,11 @@
     "jsdom": "^29.1.1",
     "typescript": "^5.8.2",
     "vitest": "^4.1.10"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici@>=7.0.0 <7.29.0": "^7.29.0",
+      "postcss@<8.5.23": "^8.5.23"
+    }
   }
 }

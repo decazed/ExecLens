@@ -9,13 +9,22 @@ export type ExecutionArtifact = {
   cleanupDir?: string;
 };
 
+const JS_EXTENSIONS = [".js", ".mjs", ".cjs"];
+const TS_EXTENSIONS = [".ts", ".mts", ".cts", ".tsx"];
+
+export const SUPPORTED_EXTENSIONS = [...JS_EXTENSIONS, ...TS_EXTENSIONS];
+
+export function isSupportedFile(filePath: string): boolean {
+  return SUPPORTED_EXTENSIONS.includes(path.extname(filePath).toLowerCase());
+}
+
 export async function prepareExecutionArtifact(filePath: string): Promise<ExecutionArtifact> {
   const extension = path.extname(filePath).toLowerCase();
-  if (extension === ".js" || extension === ".mjs" || extension === ".cjs") {
+  if (JS_EXTENSIONS.includes(extension)) {
     return { moduleSpecifier: pathToFileURL(filePath).href };
   }
 
-  if (extension === ".ts" || extension === ".mts" || extension === ".cts" || extension === ".tsx") {
+  if (TS_EXTENSIONS.includes(extension)) {
     return transpileTypeScriptFile(filePath);
   }
 
