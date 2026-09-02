@@ -2,6 +2,7 @@
   "name": "@execlens/ide-vscode",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "displayName": "Execlens",
   "type": "module",
   "main": "./dist/extension.js",
