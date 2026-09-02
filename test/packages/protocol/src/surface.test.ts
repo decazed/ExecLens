@@ -29,6 +29,7 @@ const V1_EXPORTS = [
   "RuntimeExecutionRequest",
   "RuntimeExecutionResult",
   "RuntimeExecutionSuccess",
+  "RuntimeFailureReason",
   "SimulationAbortSignal",
   "SimulationFailure",
   "SimulationRequest",

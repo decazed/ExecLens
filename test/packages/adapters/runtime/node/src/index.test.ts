@@ -101,12 +101,35 @@ describe("NodeRuntimeAdapter", () => {
 
     expect(result).toMatchObject({
       ok: false,
-      errorName: "Error"
+      errorName: "TimeoutError",
+      reason: "timeout"
     });
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.errorMessage).toContain("Simulation timed out after 25ms.");
     }
+  });
+
+  it("terminates a synchronous infinite loop on timeout", async () => {
+    const filePath = await writeTempFile(
+      "loop.mjs",
+      "export function spin() {\n  while (true) {}\n}\n"
+    );
+
+    const startedAt = Date.now();
+    const result = await new NodeRuntimeAdapter(100).execute({
+      target: {
+        kind: "function",
+        filePath,
+        functionName: "spin",
+        parameterNames: []
+      },
+      positionalArgs: []
+    });
+
+    expect(result).toMatchObject({ ok: false, errorName: "TimeoutError", reason: "timeout" });
+    // SIGKILL escalation must free the runner well before the test timeout.
+    expect(Date.now() - startedAt).toBeLessThan(5_000);
   });
 
   it("supports aborting a running simulation", async () => {
@@ -133,7 +156,8 @@ describe("NodeRuntimeAdapter", () => {
     await expect(execution).resolves.toMatchObject({
       ok: false,
       errorName: "AbortError",
-      errorMessage: "Simulation stopped by user."
+      errorMessage: "Simulation stopped by user.",
+      reason: "cancelled"
     });
   });
 

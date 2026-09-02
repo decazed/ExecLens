@@ -13,6 +13,7 @@ export type PlaygroundRuntimeScenario = {
         ok: false;
         errorName?: string;
         errorMessageIncludes: string;
+        reason?: "error" | "timeout" | "cancelled";
       };
   timeoutMs?: number;
 };
@@ -171,8 +172,46 @@ export const playgroundRuntimeScenarios: PlaygroundRuntimeScenario[] = [
     timeoutMs: 5,
     expected: {
       ok: false,
-      errorName: "Error",
-      errorMessageIncludes: "Simulation timed out after 5ms."
+      errorName: "TimeoutError",
+      errorMessageIncludes: "Simulation timed out after 5ms.",
+      reason: "timeout"
+    }
+  },
+  {
+    id: "ts-timeout/completes-under-timeout",
+    file: "src/12-ts-runtime-and-timeouts.ts",
+    functionName: "delayedGreeting",
+    parameterNames: ["name"],
+    args: ["Ada"],
+    timeoutMs: 2_000,
+    expected: { ok: true, returnValue: "hello Ada" }
+  },
+  {
+    id: "ts-timeout/never-resolving-promise",
+    file: "src/12-ts-runtime-and-timeouts.ts",
+    functionName: "neverResolvingPromise",
+    parameterNames: [],
+    args: [],
+    timeoutMs: 300,
+    expected: {
+      ok: false,
+      errorName: "TimeoutError",
+      errorMessageIncludes: "Simulation timed out after 300ms.",
+      reason: "timeout"
+    }
+  },
+  {
+    id: "ts-timeout/infinite-loop",
+    file: "src/12-ts-runtime-and-timeouts.ts",
+    functionName: "infiniteLoop",
+    parameterNames: [],
+    args: [],
+    timeoutMs: 300,
+    expected: {
+      ok: false,
+      errorName: "TimeoutError",
+      errorMessageIncludes: "Simulation timed out after 300ms.",
+      reason: "timeout"
     }
   },
   {

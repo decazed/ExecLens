@@ -28,12 +28,25 @@ export type RuntimeExecutionSuccess = {
   returnValue: unknown;
 };
 
+/**
+ * Why a runtime execution or simulation failed:
+ *
+ * - `"error"` — the target threw, or the adapter could not run it.
+ * - `"timeout"` — execution exceeded the timeout and was terminated.
+ * - `"cancelled"` — execution was aborted via a {@link SimulationAbortSignal}.
+ *
+ * Added in `@execlens/protocol@1.1.0`; optional, so `1.0.0` consumers are
+ * unaffected.
+ */
+export type RuntimeFailureReason = "error" | "timeout" | "cancelled";
+
 /** A runtime adapter failed (threw, timed out, was cancelled, or could not run). */
 export type RuntimeExecutionFailure = {
   ok: false;
   errorName: string;
   errorMessage: string;
   stack?: string;
+  reason?: RuntimeFailureReason;
 };
 
 /** The low-level result a runtime adapter produces. `core` normalizes it. */
@@ -60,6 +73,7 @@ export type SimulationFailure = {
   errorName: string;
   errorMessage: string;
   stack?: string;
+  reason?: RuntimeFailureReason;
   trace: SimulationTraceEvent[];
 };
 
