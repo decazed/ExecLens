@@ -32,6 +32,7 @@ export default defineConfig({
       include: ["packages/**/src/**/*.{ts,js}"],
       exclude: [
         "packages/**/dist/**",
+        "packages/adapters/language/_template/**",
         "packages/adapters/ide/vscode/src/extension.ts",
         "packages/ui/src/panel/**/*.js"
       ]

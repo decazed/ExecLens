@@ -50,6 +50,12 @@ importers:
         specifier: ^1.96.0
         version: 1.109.0
 
+  packages/adapters/language/_template:
+    dependencies:
+      '@execlens/protocol':
+        specifier: workspace:*
+        version: link:../../../protocol
+
   packages/adapters/language/tsjs:
     dependencies:
       '@execlens/protocol':

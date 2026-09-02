@@ -4,6 +4,7 @@
     { "path": "./packages/protocol" },
     { "path": "./packages/core" },
     { "path": "./packages/adapters/language/tsjs" },
+    { "path": "./packages/adapters/language/_template" },
     { "path": "./packages/adapters/runtime/node" },
     { "path": "./packages/ui" },
     { "path": "./packages/adapters/ide/vscode" }
