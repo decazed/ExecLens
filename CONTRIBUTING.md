@@ -110,3 +110,18 @@ Prefer small, coherent pull requests:
 - docs-only update
 
 Avoid mixing unrelated refactors with behavior changes.
+
+## Workflow
+
+- Branch from `develop` using `type/kebab-case-summary`, for example
+  `feat/python-language-adapter` or `chore/add-ci-workflow`.
+- Commit messages follow Conventional Commits: `type(scope): summary`, lowercase,
+  no trailing period.
+- Open the pull request against `develop`. Releases flow `develop` -> `main`.
+- CI runs `pnpm quality` on every pull request; it must be green before merge.
+
+## Licensing of Contributions
+
+This project is licensed under the [MIT License](LICENSE). By submitting a
+contribution, you agree that your contribution is licensed under the same terms.
+There is no separate CLA to sign.

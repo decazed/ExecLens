@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest a change that is not a new adapter.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a new language / IDE / runtime adapter, use the "Adapter proposal" template instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that Execlens makes hard or impossible today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What you would like to happen.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Function analysis (language adapter)
+        - Simulation / runtime execution
+        - Simulator panel / UI
+        - VS Code integration
+        - Core / protocol
+        - Playground / tests
+        - Docs
+        - Build / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
