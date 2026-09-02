@@ -5,7 +5,8 @@ IDEs, and runtimes without weakening package boundaries.
 
 ## Add a Language Adapter
 
-Create a package under `packages/adapters/language/<name>`.
+Start from the template: copy `packages/adapters/language/_template` to
+`packages/adapters/language/<name>` and follow its `README.md`.
 
 It should:
 

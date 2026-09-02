@@ -7,7 +7,7 @@ center, while IDEs, language analyzers, runtimes, and UI surfaces are adapters.
 
 | Package | Role | Allowed dependencies |
 | --- | --- | --- |
-| `@execlens/protocol` | Stable contracts and ports shared by all packages. | None |
+| `@execlens/protocol` | Stable contracts and ports shared by all packages (v1, see [Protocol](PROTOCOL.md)). | None |
 | `@execlens/core` | Use cases and orchestration. | `@execlens/protocol` only |
 | `@execlens/adapter-tsjs` | TypeScript/JavaScript function analysis. | `@execlens/protocol`, TypeScript compiler APIs |
 | `@execlens/adapter-node-runtime` | Node.js runtime execution. | `@execlens/protocol`, Node/TypeScript runtime APIs |

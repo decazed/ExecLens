@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: "/"
+    target-branch: develop
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
@@ -9,8 +10,13 @@ updates:
       dev-dependencies:
         dependency-type: development
         update-types: [minor, patch]
+    ignore:
+      # Keep @types/node in step with the Node version pinned in .nvmrc.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
+    target-branch: develop
     schedule:
       interval: weekly

@@ -22,6 +22,7 @@ pnpm test:coverage
 Read:
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Protocol](docs/PROTOCOL.md)
 - [Adding adapters](docs/ADAPTERS.md)
 - [Testing](docs/TESTING.md)
 
@@ -36,13 +37,14 @@ Core rules:
 
 ## Adding a Language
 
-Add a package under:
+Copy `packages/adapters/language/_template` to:
 
 ```txt
 packages/adapters/language/<language-id>
 ```
 
-The adapter should implement `LanguageAdapter` from `@execlens/protocol`.
+and follow its `README.md`. The adapter implements `LanguageAdapter` from
+`@execlens/protocol`.
 
 Also add:
 

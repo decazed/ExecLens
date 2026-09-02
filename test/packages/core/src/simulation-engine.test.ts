@@ -96,6 +96,24 @@ describe("SimulationEngine", () => {
     });
   });
 
+  it("propagates the failure reason from the runtime result", async () => {
+    const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: () => true,
+      execute: vi.fn(async () => ({
+        ok: false as const,
+        errorName: "TimeoutError",
+        errorMessage: "Simulation timed out after 100ms.",
+        reason: "timeout" as const
+      }))
+    };
+    const now = createClock([0, 100]);
+
+    const result = await new SimulationEngine(runtimeAdapter, { now }).simulate(request);
+
+    expect(result).toMatchObject({ ok: false, reason: "timeout" });
+  });
+
   it("converts adapter throws to simulation failures", async () => {
     const runtimeAdapter: RuntimeAdapter = {
       id: "test",
