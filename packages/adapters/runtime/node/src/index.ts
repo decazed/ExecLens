@@ -2,16 +2,23 @@ import type {
   RuntimeAdapter,
   RuntimeExecutionRequest,
   RuntimeExecutionResult,
-  SimulationAbortSignal
+  SimulationAbortSignal,
+  SimulationTarget
 } from "@execlens/protocol";
 import { executeInChildProcess } from "./child-process-runner.js";
-import { cleanupExecutionArtifact, prepareExecutionArtifact } from "./execution-artifact.js";
+import { cleanupExecutionArtifact, isSupportedFile, prepareExecutionArtifact } from "./execution-artifact.js";
 import { toRuntimeExecutionFailure } from "./errors.js";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 export class NodeRuntimeAdapter implements RuntimeAdapter {
+  public readonly id = "node";
+
   public constructor(private readonly timeoutMs = DEFAULT_TIMEOUT_MS) {}
+
+  public canRun(target: SimulationTarget): boolean {
+    return target.kind === "function" && isSupportedFile(target.filePath);
+  }
 
   public async execute(
     request: RuntimeExecutionRequest,

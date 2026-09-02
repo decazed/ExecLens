@@ -1,6 +1,11 @@
-export { analyzeFunctionContext, FunctionAnalysisEngine } from "./function-analysis-engine.js";
+export {
+  analyzeFunctionContext,
+  FunctionAnalysisEngine,
+  selectLanguageAdapter
+} from "./function-analysis-engine.js";
 export {
   createRuntimeExecutionRequest,
+  selectRuntimeAdapter,
   simulateFunction,
   SimulationEngine,
   type SimulationEngineOptions

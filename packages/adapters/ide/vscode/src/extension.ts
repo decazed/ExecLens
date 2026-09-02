@@ -4,9 +4,9 @@ import { NodeRuntimeAdapter } from "@execlens/adapter-node-runtime";
 import { VsCodeFunctionContextService } from "./function-context.js";
 import { openSimulatorPanel } from "./simulator-panel.js";
 
-const languageAdapter = new TsJsLanguageAdapter();
-const runtimeAdapter = new NodeRuntimeAdapter();
-const functionContextService = new VsCodeFunctionContextService(languageAdapter);
+const languageAdapters = [new TsJsLanguageAdapter()];
+const runtimeAdapters = [new NodeRuntimeAdapter()];
+const functionContextService = new VsCodeFunctionContextService(languageAdapters);
 
 export function activate(context: vscode.ExtensionContext): void {
   const refreshFunctionContext = async (editor: vscode.TextEditor | undefined): Promise<void> => {
@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const functionInfo = await functionContextService.getFunctionInfoUnderCursor(vscode.window.activeTextEditor);
     openSimulatorPanel({
       functionInfo,
-      runtimeAdapter
+      runtimeAdapters
     });
   });
 

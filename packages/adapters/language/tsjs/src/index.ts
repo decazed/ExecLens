@@ -10,7 +10,20 @@ export type {
   LanguageSymbolKind
 } from "./types.js";
 
+export const TSJS_LANGUAGE_IDS = [
+  "typescript",
+  "typescriptreact",
+  "javascript",
+  "javascriptreact"
+] as const;
+
 export class TsJsLanguageAdapter implements LanguageAdapter {
+  public readonly id = "tsjs";
+
+  public canAnalyze(languageId: string): boolean {
+    return (TSJS_LANGUAGE_IDS as readonly string[]).includes(languageId);
+  }
+
   public analyzeFunctionAtCursor(input: AnalyzeInput): LanguageFunctionInfo | null {
     return analyzeFunctionAtCursor(input);
   }

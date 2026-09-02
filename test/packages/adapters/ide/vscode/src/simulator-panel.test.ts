@@ -12,6 +12,8 @@ describe("openSimulatorPanel", () => {
     const { panel, messageHandlers } = createPanel();
     vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel as never);
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: vi.fn(() => true),
       execute: vi.fn(async () => ({ ok: true, returnValue: 5 }))
     };
 
@@ -21,7 +23,7 @@ describe("openSimulatorPanel", () => {
         target: createTarget(),
         parameters: []
       },
-      runtimeAdapter
+      runtimeAdapters: [runtimeAdapter]
     });
 
     expect(returnedPanel).toBe(panel);
@@ -67,6 +69,8 @@ describe("openSimulatorPanel", () => {
     const { panel, messageHandlers } = createPanel();
     vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel as never);
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: vi.fn(() => true),
       execute: vi.fn(
         async (_request, signal?: SimulationAbortSignal) =>
           new Promise((resolve) => {
@@ -87,7 +91,7 @@ describe("openSimulatorPanel", () => {
         target: createTarget(),
         parameters: []
       },
-      runtimeAdapter
+      runtimeAdapters: [runtimeAdapter]
     });
 
     messageHandlers[0]?.({
@@ -119,6 +123,8 @@ describe("openSimulatorPanel", () => {
     const { panel, messageHandlers } = createPanel();
     vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel as never);
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: vi.fn(() => true),
       execute: vi.fn(async () => ({ ok: true, returnValue: null }))
     };
 
@@ -128,7 +134,7 @@ describe("openSimulatorPanel", () => {
         target: createTarget(),
         parameters: []
       },
-      runtimeAdapter
+      runtimeAdapters: [runtimeAdapter]
     });
 
     messageHandlers[0]?.({
@@ -143,6 +149,45 @@ describe("openSimulatorPanel", () => {
     await Promise.resolve();
     expect(runtimeAdapter.execute).not.toHaveBeenCalled();
     expect(panel.webview.postMessage).not.toHaveBeenCalled();
+  });
+
+  it("posts a NoRuntimeAdapter failure when no runtime adapter can run the target", async () => {
+    const { panel, messageHandlers } = createPanel();
+    vi.spyOn(vscode.window, "createWebviewPanel").mockReturnValue(panel as never);
+    const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: vi.fn(() => false),
+      execute: vi.fn(async () => ({ ok: true, returnValue: null }))
+    };
+
+    openSimulatorPanel({
+      functionInfo: {
+        name: "add",
+        target: createTarget(),
+        parameters: []
+      },
+      runtimeAdapters: [runtimeAdapter]
+    });
+
+    messageHandlers[0]?.({
+      type: "execlens.runSimulation",
+      payload: {
+        requestId: "request-4",
+        target: createTarget(),
+        args: { a: 2, b: 3 }
+      }
+    });
+
+    await vi.waitFor(() => {
+      expect(panel.webview.postMessage).toHaveBeenCalledWith({
+        type: "execlens.simulationResult",
+        payload: {
+          requestId: "request-4",
+          result: expect.objectContaining({ ok: false, errorName: "NoRuntimeAdapter" })
+        }
+      });
+    });
+    expect(runtimeAdapter.execute).not.toHaveBeenCalled();
   });
 });
 

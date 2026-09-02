@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RuntimeAdapter, RuntimeExecutionRequest, SimulationRequest } from "@execlens/protocol";
-import { createRuntimeExecutionRequest, SimulationEngine, simulateFunction } from "../../../../packages/core/src/index.js";
+import {
+  createRuntimeExecutionRequest,
+  selectRuntimeAdapter,
+  SimulationEngine,
+  simulateFunction
+} from "../../../../packages/core/src/index.js";
 
 const request: SimulationRequest = {
   target: {
@@ -37,6 +42,8 @@ describe("createRuntimeExecutionRequest", () => {
 describe("SimulationEngine", () => {
   it("returns a normalized success result with duration and trace", async () => {
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: () => true,
       execute: vi.fn(async () => ({ ok: true, returnValue: 5 }))
     };
     const now = createClock([100, 125]);
@@ -63,6 +70,8 @@ describe("SimulationEngine", () => {
 
   it("returns a normalized failure result from runtime failures", async () => {
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: () => true,
       execute: vi.fn(async () => ({
         ok: false,
         errorName: "RuntimeError",
@@ -89,6 +98,8 @@ describe("SimulationEngine", () => {
 
   it("converts adapter throws to simulation failures", async () => {
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: () => true,
       execute: vi.fn(async () => {
         throw new TypeError("adapter exploded");
       })
@@ -113,6 +124,8 @@ describe("SimulationEngine", () => {
     const abortSignal = new AbortController().signal;
     let receivedRequest: RuntimeExecutionRequest | null = null;
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: () => true,
       execute: vi.fn(async (runtimeRequest) => {
         receivedRequest = runtimeRequest;
         return { ok: true, returnValue: "ok" };
@@ -133,6 +146,8 @@ describe("SimulationEngine", () => {
 describe("simulateFunction", () => {
   it("keeps the backwards-compatible function API", async () => {
     const runtimeAdapter: RuntimeAdapter = {
+      id: "test",
+      canRun: () => true,
       execute: vi.fn(async () => ({ ok: true, returnValue: 5 }))
     };
 
@@ -140,6 +155,29 @@ describe("simulateFunction", () => {
       ok: true,
       returnValue: 5
     });
+  });
+});
+
+describe("selectRuntimeAdapter", () => {
+  const makeAdapter = (id: string, accepts: (filePath: string) => boolean): RuntimeAdapter => ({
+    id,
+    canRun: (target) => target.kind === "function" && accepts(target.filePath),
+    execute: vi.fn(async () => ({ ok: true, returnValue: null }))
+  });
+
+  it("returns the first adapter that can run the target", () => {
+    const node = makeAdapter("node", (filePath) => filePath.endsWith(".ts") || filePath.endsWith(".js"));
+    const python = makeAdapter("python", (filePath) => filePath.endsWith(".py"));
+
+    expect(selectRuntimeAdapter([python, node], request.target)).toBe(node);
+    expect(selectRuntimeAdapter([python, node], { ...request.target, filePath: "m.py" })).toBe(python);
+  });
+
+  it("returns null when no adapter matches", () => {
+    const node = makeAdapter("node", (filePath) => filePath.endsWith(".ts"));
+
+    expect(selectRuntimeAdapter([node], { ...request.target, filePath: "m.rb" })).toBeNull();
+    expect(selectRuntimeAdapter([], request.target)).toBeNull();
   });
 });
 
