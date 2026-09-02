@@ -1,13 +1,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { SimulationTarget, SimulatorParameterField } from "@execlens/protocol";
+import type { SimulatorFunctionInfo, SimulatorParameterField } from "@execlens/protocol";
 
-export type SimulatorFunctionInfo = {
-  name: string;
-  parameters: SimulatorParameterField[];
-  target?: SimulationTarget;
-};
+export type { SimulatorFunctionInfo } from "@execlens/protocol";
 
 type RenderSimulatorPanelHtmlInput = {
   cspSource: string;
@@ -141,6 +137,13 @@ type PanelAssets = {
   script: string;
 };
 
+const PANEL_SCRIPT_FILES = [
+  "panel.output.js",
+  "panel.fields.js",
+  "panel.structured-editor.js",
+  "panel.js"
+] as const;
+
 let cachedPanelAssets: PanelAssets | null = null;
 
 function getPanelAssets(): PanelAssets {
@@ -153,7 +156,7 @@ function getPanelAssets(): PanelAssets {
     try {
       const template = readFileSync(path.join(baseDir, "panel.html"), "utf-8");
       const styles = readFileSync(path.join(baseDir, "panel.css"), "utf-8");
-      const script = readFileSync(path.join(baseDir, "panel.js"), "utf-8");
+      const script = readPanelScript(baseDir);
       cachedPanelAssets = { template, styles, script };
       return cachedPanelAssets;
     } catch {
@@ -162,6 +165,11 @@ function getPanelAssets(): PanelAssets {
   }
 
   throw new Error("Unable to load UI panel assets (panel.html/panel.css/panel.js).");
+}
+
+function readPanelScript(baseDir: string): string {
+  const scriptParts = PANEL_SCRIPT_FILES.map((fileName) => readFileSync(path.join(baseDir, fileName), "utf-8"));
+  return scriptParts.join("\n\n");
 }
 
 function getPanelAssetBaseDirs(): string[] {

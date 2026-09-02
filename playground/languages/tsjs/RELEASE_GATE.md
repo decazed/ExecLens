@@ -1,9 +1,9 @@
-# Release Gate
+# Release Gate: TS/JS
 
-Ce fichier définit le sens du playground.
+Ce fichier definit le sens du playground `playground/languages/tsjs`.
 
-Le playground n'est pas une démo.
-C'est la feuille de route de couverture fonctionnelle d'Execlens.
+Ce playground n'est pas une demo.
+C'est la feuille de route de couverture fonctionnelle pour le langage TS/JS.
 
 ## Définition du succès global
 

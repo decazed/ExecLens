@@ -1,4 +1,11 @@
-# Execlens Playground
+# Execlens Playground: TS/JS
+
+Ce playground couvre explicitement le langage TS/JS :
+
+- language adapter: `packages/adapters/language/tsjs`
+- runtime adapter: `packages/adapters/runtime/node`
+
+Il vit dans `playground/languages/tsjs` pour etre reutilisable par tous les adapters IDE.
 
 Ce workspace est la matrice de couverture manuelle d'Execlens.
 
