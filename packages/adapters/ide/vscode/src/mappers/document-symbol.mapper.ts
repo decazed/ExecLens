@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { LanguageDocumentSymbol } from "@execlens/adapter-tsjs";
+import type { LanguageDocumentSymbol } from "@execlens/protocol";
 
 export function toLanguageSymbol(document: vscode.TextDocument, symbol: vscode.DocumentSymbol): LanguageDocumentSymbol {
   return {

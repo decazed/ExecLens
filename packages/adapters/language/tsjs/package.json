@@ -16,7 +16,6 @@
     "clean": "tsc -b --clean"
   },
   "dependencies": {
-    "@execlens/core": "workspace:*",
     "@execlens/protocol": "workspace:*",
     "typescript": "^5.9.3"
   }
