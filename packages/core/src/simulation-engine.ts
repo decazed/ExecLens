@@ -89,6 +89,7 @@ function createSimulationResult(
     durationMs: finishedAt - startedAt,
     errorName: executionResult.errorName,
     errorMessage: executionResult.errorMessage,
+    ...(executionResult.reason ? { reason: executionResult.reason } : {}),
     ...(executionResult.stack ? { stack: executionResult.stack } : {}),
     trace: [
       { type: "start", at: startedAt },
@@ -107,6 +108,7 @@ function toRuntimeExecutionFailure(error: unknown): RuntimeExecutionFailure {
     ok: false,
     errorName: error instanceof Error ? error.name : "SimulationError",
     errorMessage: error instanceof Error ? error.message : String(error),
+    reason: "error",
     ...(error instanceof Error && error.stack ? { stack: error.stack } : {})
   };
 }

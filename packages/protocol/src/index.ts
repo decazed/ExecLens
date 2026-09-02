@@ -34,6 +34,7 @@ export type {
   RuntimeExecutionRequest,
   RuntimeExecutionResult,
   RuntimeExecutionSuccess,
+  RuntimeFailureReason,
   SimulationAbortSignal,
   SimulationFailure,
   SimulationRequest,

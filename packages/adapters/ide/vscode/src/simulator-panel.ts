@@ -101,7 +101,8 @@ class SimulatorPanelController {
     try {
       const result = await simulateFunction(runtimeAdapter, request, this.currentAbortController.signal);
 
-      if (result.ok === false && result.errorName === "AbortError" && this.currentRequestId === requestId) {
+      const cancelled = result.ok === false && (result.reason === "cancelled" || result.errorName === "AbortError");
+      if (cancelled && this.currentRequestId === requestId) {
         await this.panel.webview.postMessage({
           type: "execlens.simulationCancelled",
           payload: { requestId }

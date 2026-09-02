@@ -1,8 +1,8 @@
 # Protocol (`@execlens/protocol`)
 
 `@execlens/protocol` is the contract every Execlens package and every third-party
-adapter depends on. It contains **types only** — no runtime code. It is at
-version **1.0.0**.
+adapter depends on. It contains **types only** — no runtime code. It is on the
+**`1.x`** line (current: `1.1.0`).
 
 ## Stability policy
 
@@ -51,6 +51,7 @@ and this document are updated deliberately.
 | `RuntimeAdapter` | Port implemented by runtime packages. `id`, `canRun(target)`, `execute(request, signal?)`. |
 | `RuntimeExecutionRequest` | Target + positional args + optional `timeoutMs`. |
 | `RuntimeExecutionResult` | `RuntimeExecutionSuccess` \| `RuntimeExecutionFailure` — the low-level result an adapter returns. |
+| `RuntimeFailureReason` | `"error"` \| `"timeout"` \| `"cancelled"`. Optional `reason` on `RuntimeExecutionFailure` and `SimulationFailure` (added in `1.1.0`). |
 | `SimulationResult` | `SimulationSuccess` \| `SimulationFailure` — normalized by `core` with `durationMs` and `trace`. |
 | `SimulationTraceEvent` | `start` \| `return` \| `throw`. |
 | `SimulationAbortSignal` | Structural subset of the DOM `AbortSignal` used for cancellation. |

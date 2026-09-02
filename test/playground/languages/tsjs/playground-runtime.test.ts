@@ -33,7 +33,8 @@ describe("playground runtime scenarios", () => {
 
       expect(result).toMatchObject({
         ok: false,
-        ...(scenario.expected.errorName ? { errorName: scenario.expected.errorName } : {})
+        ...(scenario.expected.errorName ? { errorName: scenario.expected.errorName } : {}),
+        ...(scenario.expected.reason ? { reason: scenario.expected.reason } : {})
       });
       expect(result.ok).toBe(false);
       if (!result.ok) {
