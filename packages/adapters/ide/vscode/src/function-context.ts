@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { analyzeFunctionContext } from "@execlens/core";
+import { analyzeFunctionContext, selectLanguageAdapter } from "@execlens/core";
 import type {
   LanguageAdapter,
   LanguageFunctionInfo,
@@ -9,10 +9,19 @@ import type {
 import { toLanguageSymbol } from "./mappers/document-symbol.mapper.js";
 
 export class VsCodeFunctionContextService {
-  public constructor(private readonly languageAdapter: LanguageAdapter) {}
+  private readonly languageAdapters: readonly LanguageAdapter[];
+
+  public constructor(languageAdapters: readonly LanguageAdapter[]) {
+    this.languageAdapters = languageAdapters;
+  }
 
   public async analyzeCurrentFunction(editor: vscode.TextEditor | undefined): Promise<LanguageFunctionInfo | null> {
     if (!editor) {
+      return null;
+    }
+
+    const languageAdapter = selectLanguageAdapter(this.languageAdapters, editor.document.languageId);
+    if (!languageAdapter) {
       return null;
     }
 
@@ -22,7 +31,7 @@ export class VsCodeFunctionContextService {
     }
 
     const languageSymbols = symbols.map((symbol) => toLanguageSymbol(editor.document, symbol));
-    return analyzeFunctionContext(this.languageAdapter, {
+    return analyzeFunctionContext(languageAdapter, {
       documentText: editor.document.getText(),
       fileName: editor.document.fileName,
       languageId: editor.document.languageId,

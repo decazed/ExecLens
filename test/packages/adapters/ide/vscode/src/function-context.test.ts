@@ -29,6 +29,23 @@ describe("VsCodeFunctionContextService", () => {
     });
   });
 
+  it("returns null when no language adapter handles the editor language", async () => {
+    const executeCommand = vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue([]);
+    const adapters = [
+      {
+        id: "test",
+        canAnalyze: vi.fn(() => false),
+        analyzeFunctionAtCursor: vi.fn(async () => null)
+      }
+    ];
+    const service = new VsCodeFunctionContextService(adapters);
+
+    await expect(service.analyzeCurrentFunction(createEditor())).resolves.toBeNull();
+    expect(adapters[0]?.canAnalyze).toHaveBeenCalledWith("typescript");
+    expect(adapters[0]?.analyzeFunctionAtCursor).not.toHaveBeenCalled();
+    expect(executeCommand).not.toHaveBeenCalled();
+  });
+
   it("builds language analysis input from the active editor and VS Code symbols", async () => {
     const symbol = createDocumentSymbol("add", vscode.SymbolKind.Function, 0, 56);
     vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue([symbol]);
@@ -44,14 +61,14 @@ describe("VsCodeFunctionContextService", () => {
         }
       ]
     };
-    const adapter = createAdapter(functionInfo);
+    const adapters = createAdapter(functionInfo);
     const editor = createEditor();
-    const service = new VsCodeFunctionContextService(adapter);
+    const service = new VsCodeFunctionContextService(adapters);
 
     const result = await service.analyzeCurrentFunction(editor);
 
     expect(result).toBe(functionInfo);
-    expect(adapter.analyzeFunctionAtCursor).toHaveBeenCalledWith({
+    expect(adapters[0]?.analyzeFunctionAtCursor).toHaveBeenCalledWith({
       documentText: "export function add(a: number): number { return a; }",
       fileName: "sample.ts",
       languageId: "typescript",
@@ -99,10 +116,14 @@ describe("VsCodeFunctionContextService", () => {
   });
 });
 
-function createAdapter(result: LanguageFunctionInfo | null): LanguageAdapter {
-  return {
-    analyzeFunctionAtCursor: vi.fn(async () => result)
-  };
+function createAdapter(result: LanguageFunctionInfo | null): LanguageAdapter[] {
+  return [
+    {
+      id: "test",
+      canAnalyze: vi.fn(() => true),
+      analyzeFunctionAtCursor: vi.fn(async () => result)
+    }
+  ];
 }
 
 function createEditor(): never {
