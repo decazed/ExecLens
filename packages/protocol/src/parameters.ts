@@ -1,8 +1,14 @@
+/** A choice offered by a `select` control: a display `label` and its `value`. */
 export type ParameterFieldOption = {
   label: string;
   value: string;
 };
 
+/**
+ * A recursive description of the shape of a structured parameter value, used by
+ * the UI to render a nested editor. Leaves are `primitive`; containers are
+ * `object`, `array`, or `tuple`.
+ */
 export type ParameterStructureNode =
   | {
       kind: "primitive";
@@ -34,6 +40,15 @@ export type ParameterStructureNode =
       allowUndefined?: boolean;
     };
 
+/**
+ * One editable input field for a function parameter.
+ *
+ * - `editor: "value"` is a single scalar input; `editor: "json"` is a structured
+ *   editor driven by `structure`.
+ * - `initialValue` is a string for `"value"` fields and a JSON string for
+ *   `"json"` fields.
+ * - `control` / `options` refine a `"value"` field into a checkbox or a select.
+ */
 export type FunctionParameterField = {
   name: string;
   typeLabel: string;

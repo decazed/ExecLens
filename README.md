@@ -43,6 +43,7 @@ Execlens follows a hexagonal architecture.
 Read:
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Protocol](docs/PROTOCOL.md)
 - [Adding adapters](docs/ADAPTERS.md)
 - [Testing](docs/TESTING.md)
 - [Contributing](CONTRIBUTING.md)

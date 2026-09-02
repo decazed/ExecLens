@@ -22,6 +22,7 @@ pnpm test:coverage
 Read:
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Protocol](docs/PROTOCOL.md)
 - [Adding adapters](docs/ADAPTERS.md)
 - [Testing](docs/TESTING.md)
 
